@@ -1,0 +1,6 @@
+源文件/
+scratch/
+__pycache__/
+*.pyc
+*.docx
+build_docx.py

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ITEST 21 雅思词汇随身助手</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#0f766e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/card.css">
+  <link rel="stylesheet" href="css/reader.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand-title">
+        <span>ITEST 21</span>
+        <span class="brand-badge">雅思真题</span>
+      </div>
+      <div class="header-actions">
+        <button id="theme-toggle-btn" class="icon-btn" title="切换模式">🌙</button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+
+      <!-- View 1: Flashcard / 速记卡片 -->
+      <section id="view-flashcard" class="view-section active">
+        <div class="flashcard-view-container">
+          
+          <!-- Top Progress -->
+          <div class="card-header-bar">
+            <div class="progress-track">
+              <div id="progress-fill" class="progress-fill"></div>
+            </div>
+            <div id="card-counter" class="card-counter">1 / 56</div>
+          </div>
+
+          <!-- 3D Card Scene -->
+          <div class="card-scene" id="card-scene">
+            <div class="flashcard" id="flashcard">
+              
+              <!-- Front Face -->
+              <div class="card-face front">
+                <span class="card-source-tag" id="card-front-tag">Test 1 · Section 1</span>
+                
+                <div class="front-center">
+                  <div class="word-title" id="card-front-word">entrants</div>
+                  <div class="phonetic-row" id="speak-btn">
+                    <span id="card-front-phonetic">/ˈentrənts/</span>
+                    <svg class="speak-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    </svg>
+                  </div>
+                </div>
+
+                <div class="card-hint">
+                  <span>👆 轻触卡片翻面看释义</span>
+                </div>
+              </div>
+
+              <!-- Back Face -->
+              <div class="card-face back">
+                <div class="back-header">
+                  <span class="back-word" id="card-back-word">entrants</span>
+                  <span class="back-pos" id="card-back-pos">n.</span>
+                </div>
+
+                <div class="definition-box">
+                  <div class="zh-meaning" id="card-back-zh">参赛者、新加入者</div>
+                  <div class="notes-callout" id="card-back-notes">
+                    手写批注：n. 参赛者。与文中 all entrants 紧密相扣。
+                  </div>
+                </div>
+
+                <div class="sentence-section">
+                  <div class="sentence-en" id="card-back-sentence-en">The organising committee...</div>
+                  <div class="sentence-zh" id="card-back-sentence-zh">组委会欢迎所有赛事的参赛者。</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Rating Controls -->
+          <div class="rating-bar">
+            <button class="rate-btn btn-hard" id="btn-hard">
+              <span>忘记</span>
+              <span class="rate-sub">重新复习</span>
+            </button>
+            <button class="rate-btn btn-good" id="btn-good">
+              <span>模糊</span>
+              <span class="rate-sub">需强化</span>
+            </button>
+            <button class="rate-btn btn-easy" id="btn-easy">
+              <span>掌握</span>
+              <span class="rate-sub">下一个</span>
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- View 2: List / 词汇全表与检索 -->
+      <section id="view-list" class="view-section">
+        <div class="search-bar-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="search-input" class="search-input" placeholder="全局搜索英文、中文释义...">
+        </div>
+
+        <div class="filter-tags">
+          <button class="filter-btn active" data-filter="all">全部 (56)</button>
+          <button class="filter-btn" data-filter="t1">Test 1</button>
+          <button class="filter-btn" data-filter="t2">Test 2</button>
+          <button class="filter-btn" data-filter="unlearned">未学</button>
+          <button class="filter-btn" data-filter="learning">待复习</button>
+          <button class="filter-btn" data-filter="mastered">已掌握</button>
+        </div>
+
+        <div class="vocab-list" id="vocab-list-container">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+
+      <!-- View 3: Sentences / 精选长难句研读 -->
+      <section id="view-sentences" class="view-section">
+        <div style="margin-bottom: 14px;">
+          <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main);">绿色标注 · 长难句研读</h2>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">轻触句法成分色块可查看对应句子成分解析与真题考点</p>
+        </div>
+        <div id="sentences-container">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+
+      <!-- View 4: Stats / 记忆进度与数据 -->
+      <section id="view-stats" class="view-section">
+        <div style="margin-bottom: 16px;">
+          <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main);">学习与复习统计</h2>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">数据实时保存在你的手机本地存储中，离线可用</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+          <div style="background-color: var(--bg-card); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--color-primary);" id="stat-total">56</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">词库总数</div>
+          </div>
+          <div style="background-color: var(--bg-card); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--color-success);" id="stat-mastered">0</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">已掌握</div>
+          </div>
+          <div style="background-color: var(--bg-card); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--color-warning);" id="stat-learning">0</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">模糊/复习中</div>
+          </div>
+          <div style="background-color: var(--bg-card); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--text-secondary);" id="stat-unlearned">56</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">新词待学</div>
+          </div>
+        </div>
+
+        <div style="background-color: var(--bg-card); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 20px;">
+          <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px;">💡 离线手机桌面安装指南</h3>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+            1. 在手机浏览器（Chrome / 夸克 / Edge）中打开本站；<br>
+            2. 点击浏览器菜单（通常在右上角或底部工具栏）；<br>
+            3. 选择<strong>「添加到主屏幕 (Add to Home screen)」</strong>；<br>
+            4. 即可在桌面生成独立 App，以后无需联网也能秒开复习！
+          </p>
+        </div>
+
+        <button id="reset-progress-btn" style="width: 100%; padding: 12px; background: none; border: 1px solid var(--color-danger); color: var(--color-danger); border-radius: var(--radius-md); font-weight: 600; cursor: pointer;">
+          重置当前所有复习进度
+        </button>
+      </section>
+
+    </main>
+
+    <!-- Bottom Tab Navigation -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-view="flashcard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+        <span>速记卡</span>
+      </button>
+
+      <button class="nav-item" data-view="list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <line x1="8" y1="6" x2="21" y2="6"></line>
+          <line x1="8" y1="12" x2="21" y2="12"></line>
+          <line x1="8" y1="18" x2="21" y2="18"></line>
+          <line x1="3" y1="6" x2="3.01" y2="6"></line>
+          <line x1="3" y1="12" x2="3.01" y2="12"></line>
+          <line x1="3" y1="18" x2="3.01" y2="18"></line>
+        </svg>
+        <span>词汇表</span>
+      </button>
+
+      <button class="nav-item" data-view="sentences">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        <span>长难句</span>
+      </button>
+
+      <button class="nav-item" data-view="stats">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M18 20V10"></path>
+          <path d="M12 20V4"></path>
+          <path d="M6 20v-6"></path>
+        </svg>
+        <span>统计</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/swipe.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('PWA ServiceWorker registered', reg))
+          .catch(err => console.log('ServiceWorker registration failed', err));
+      });
+    }
+  </script>
+</body>
+</html>
