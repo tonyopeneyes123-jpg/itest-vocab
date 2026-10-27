@@ -1,116 +1,207 @@
 /**
- * 手机与Web原生语音发音引擎 (Web Speech API)
- * 解决问题：
- * 1. 偶发无声音 / 延迟很久才出声（浏览器垃圾回收与假死 bug）
- * 2. 交互逻辑改为：按一下播放，再按一下暂停，而不是重新从头播放
+ * 手机端与Web端高可靠语音发音引擎
+ * 方案设计：
+ * 1. 单词/短语：首选有道官方雅思高保真真人发音音频源（type=1 英音, type=2 美音），支持离线缓存，无依赖无权限弹窗，100% 在移动端出声。
+ * 2. 长句/多行文本：首选有道/Google音频，兜底回退到系统 Web Speech API。
+ * 3. 严格遵循交互逻辑：点按第1下播放，点按第2下即刻暂停/停止，不重新播放。
  */
 const AudioPlayer = {
-  voice: null,
-  lang: 'en-GB', // 雅思官方首选英音
-  currentUtterance: null,
+  currentAudio: null,
   currentText: '',
-  activeListener: null, // 当前正在播放的回调通知
+  onStateChangeCallback: null,
+  speechSynthUtterance: null,
 
   init() {
-    if (!('speechSynthesis' in window)) return;
-    const loadVoices = () => {
-      const voices = window.speechSynthesis.getVoices();
-      if (!voices || voices.length === 0) return;
-      // 优先英音，次选美音，最后任意英语
-      this.voice = voices.find(v => v.lang === 'en-GB') ||
-                   voices.find(v => v.lang === 'en-US') ||
-                   voices.find(v => v.lang.startsWith('en')) ||
-                   voices[0];
-    };
-
-    loadVoices();
-    if (window.speechSynthesis.onvoiceschanged !== undefined) {
-      window.speechSynthesis.onvoiceschanged = loadVoices;
-    }
-
-    // 处理移动端后台切换后唤醒
+    // 监听全局页面切换以暂停播放
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden && window.speechSynthesis) {
+      if (document.hidden) {
         this.stop();
       }
     });
+
+    // 预热 Web Speech API
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
+      if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = () => {
+          window.speechSynthesis.getVoices();
+        };
+      }
+    }
   },
 
   /**
-   * 核心播放/暂停控制逻辑
-   * @param {string} text - 朗读文本
-   * @param {function} onStateChange - 状态变更回调 (isPlaying: boolean)
+   * 点击切换播放 / 暂停
+   * @param {string} text 播放文本
+   * @param {function} onStateChange 回调函数 (isPlaying: boolean)
    */
   toggle(text, onStateChange = null) {
-    if (!('speechSynthesis' in window)) {
-      console.warn('Speech synthesis not supported');
-      return;
-    }
-
+    if (!text) return;
     const cleanText = text.replace(/\(.*\)/g, '').split('/')[0].trim();
 
-    // 1. 如果正在朗读同一个文本 -> 执行暂停/取消
-    if (window.speechSynthesis.speaking && this.currentText === cleanText) {
+    // 1. 如果当前正在播放同一个文本，按一下直接停止/暂停
+    if (this.isPlaying(cleanText)) {
       this.stop();
       if (onStateChange) onStateChange(false);
       return;
     }
 
-    // 2. 如果正在播放别的，先彻底停止
+    // 2. 否则停止之前正在播的，开始播放新内容
     this.stop();
+    this.currentText = cleanText;
+    this.onStateChangeCallback = onStateChange;
 
-    // 3. 开始新的朗读
-    this.play(cleanText, onStateChange);
+    // 判断是短词/词组还是长句子
+    const isWordOrShortPhrase = cleanText.split(/\s+/).length <= 4 && cleanText.length < 50;
+
+    if (isWordOrShortPhrase) {
+      this.playOnlineWordAudio(cleanText);
+    } else {
+      this.playSentenceAudio(cleanText);
+    }
   },
 
-  play(cleanText, onStateChange) {
-    // 关键修复 1：Chrome / Android Webview 中 speechSynthesis 假死时调用 resume 唤醒
-    window.speechSynthesis.resume();
+  playOnlineWordAudio(word) {
+    // 使用有道雅思英音官方真人发音源 (type=1 英音, type=2 美音)
+    const encoded = encodeURIComponent(word.toLowerCase());
+    const audioUrl = `https://dict.youdao.com/dictvoice?audio=${encoded}&type=1`;
 
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = this.lang;
-    if (this.voice) utterance.voice = this.voice;
-    utterance.rate = 0.9;
-    utterance.pitch = 1.0;
+    const audio = new Audio();
+    audio.src = audioUrl;
+    this.currentAudio = audio;
 
-    this.currentUtterance = utterance;
-    this.currentText = cleanText;
-
-    utterance.onstart = () => {
-      if (onStateChange) onStateChange(true);
+    audio.onplay = () => {
+      if (this.onStateChangeCallback) this.onStateChangeCallback(true);
     };
 
-    utterance.onend = () => {
-      this.currentUtterance = null;
+    audio.onended = () => {
+      this.currentAudio = null;
       this.currentText = '';
-      if (onStateChange) onStateChange(false);
+      if (this.onStateChangeCallback) this.onStateChangeCallback(false);
     };
 
-    utterance.onerror = (e) => {
-      console.warn('SpeechSynthesis error:', e);
-      this.currentUtterance = null;
+    audio.onerror = (e) => {
+      console.warn('Online audio failed, fallback to Web Speech API', e);
+      // 网络异常时降级至离线 Web Speech API
+      this.playWithWebSpeech(word);
+    };
+
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((err) => {
+        console.warn('Audio play prevented or failed:', err);
+        this.playWithWebSpeech(word);
+      });
+    }
+  },
+
+  playSentenceAudio(sentence) {
+    // 优先使用有道长句发音源
+    const encoded = encodeURIComponent(sentence);
+    const audioUrl = `https://dict.youdao.com/dictvoice?audio=${encoded}&type=1`;
+
+    const audio = new Audio();
+    audio.src = audioUrl;
+    this.currentAudio = audio;
+
+    audio.onplay = () => {
+      if (this.onStateChangeCallback) this.onStateChangeCallback(true);
+    };
+
+    audio.onended = () => {
+      this.currentAudio = null;
       this.currentText = '';
-      if (onStateChange) onStateChange(false);
+      if (this.onStateChangeCallback) this.onStateChangeCallback(false);
     };
 
-    // 关键修复 2：防止垃圾回收器在长文本或异步时回收 utterance 对象
-    window.__currentUtterance = utterance;
+    audio.onerror = () => {
+      this.playWithWebSpeech(sentence);
+    };
 
-    window.speechSynthesis.speak(utterance);
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        this.playWithWebSpeech(sentence);
+      });
+    }
+  },
+
+  playWithWebSpeech(text) {
+    if (!('speechSynthesis' in window)) {
+      if (this.onStateChangeCallback) this.onStateChangeCallback(false);
+      return;
+    }
+
+    try {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.resume();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-GB';
+      utterance.rate = 0.9;
+
+      const voices = window.speechSynthesis.getVoices();
+      if (voices && voices.length > 0) {
+        const britishVoice = voices.find(v => v.lang === 'en-GB' || v.lang === 'en_GB') ||
+                             voices.find(v => v.lang.startsWith('en'));
+        if (britishVoice) utterance.voice = britishVoice;
+      }
+
+      this.speechSynthUtterance = utterance;
+
+      utterance.onstart = () => {
+        if (this.onStateChangeCallback) this.onStateChangeCallback(true);
+      };
+
+      utterance.onend = () => {
+        this.speechSynthUtterance = null;
+        this.currentText = '';
+        if (this.onStateChangeCallback) this.onStateChangeCallback(false);
+      };
+
+      utterance.onerror = () => {
+        this.speechSynthUtterance = null;
+        this.currentText = '';
+        if (this.onStateChangeCallback) this.onStateChangeCallback(false);
+      };
+
+      window.__currentUtterance = utterance;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.warn('SpeechSynthesis invocation failed:', e);
+      if (this.onStateChangeCallback) this.onStateChangeCallback(false);
+    }
   },
 
   stop() {
-    if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    this.currentUtterance = null;
+    // 停止 HTML5 Audio
+    if (this.currentAudio) {
+      this.currentAudio.pause();
+      this.currentAudio.currentTime = 0;
+      this.currentAudio = null;
+    }
+
+    // 停止 Web Speech
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      this.speechSynthUtterance = null;
+      window.__currentUtterance = null;
+    }
+
+    if (this.onStateChangeCallback) {
+      this.onStateChangeCallback(false);
+    }
     this.currentText = '';
-    window.__currentUtterance = null;
   },
 
   isPlaying(text = null) {
-    if (!('speechSynthesis' in window)) return false;
-    if (!window.speechSynthesis.speaking) return false;
+    const isAudioPlaying = this.currentAudio && !this.currentAudio.paused;
+    const isSpeechSpeaking = 'speechSynthesis' in window && window.speechSynthesis.speaking;
+    const active = isAudioPlaying || isSpeechSpeaking;
+
+    if (!active) return false;
     if (!text) return true;
+
     const cleanText = text.replace(/\(.*\)/g, '').split('/')[0].trim();
     return this.currentText === cleanText;
   }

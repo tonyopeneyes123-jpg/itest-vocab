@@ -93,13 +93,12 @@ class VocabApp {
       this.rateCard(2); // 完全掌握
     });
 
-    // Mobile Swipe Gesture
-    setupSwipe(
-      this.cardScene,
-      () => this.nextCard(), // 左滑下一个
-      () => this.prevCard(), // 右滑上一个
-      () => this.flipCard()  // 上滑翻转
-    );
+    // Mobile Swipe Gesture: Left -> 忘记/需复习; Right -> 掌握; Up -> 翻转
+    setupCardGesture(this.cardScene, {
+      onRateHard: () => this.rateCard(1), // 标记为模糊/需复习并进入下一词
+      onRateEasy: () => this.rateCard(2), // 标记为已掌握并进入下一词
+      onFlip: () => this.flipCard()       // 上滑翻转
+    });
 
     // Search and Filter
     this.searchInput.addEventListener('input', (e) => {

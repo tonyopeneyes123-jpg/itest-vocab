@@ -46,6 +46,37 @@
   justify-content: center;
   margin: 6px 0 16px 0;
   cursor: pointer;
+  position: relative;
+  touch-action: pan-y;
+}
+
+/* Swipe Indicators */
+.swipe-indicator {
+  position: absolute;
+  top: 24px;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  font-size: 0.95rem;
+  font-weight: 800;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 50;
+  box-shadow: var(--shadow-md);
+}
+
+.indicator-hard {
+  left: 20px;
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 2px solid #ef4444;
+}
+
+.indicator-easy {
+  right: 20px;
+  background-color: #d1fae5;
+  color: #059669;
+  border: 2px solid #10b981;
 }
 
 .flashcard {
