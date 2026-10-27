@@ -1,0 +1,21 @@
+{
+  "name": "ITEST 21 雅思词汇随身助手",
+  "short_name": "雅思词汇",
+  "description": "ITEST 21 雅思真题阅读生僻词与长难句随身速记",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#0f766e",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,296 @@
+/* Flashcard Container */
+.flashcard-view-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+}
+
+/* Progress Header */
+.card-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.progress-track {
+  flex: 1;
+  height: 6px;
+  background-color: var(--bg-subtle);
+  border-radius: var(--radius-full);
+  margin-right: 12px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary-light), var(--color-primary));
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.card-counter {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* 3D Flip Card Scene */
+.card-scene {
+  perspective: 1200px;
+  flex: 1;
+  min-height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 6px 0 16px 0;
+  cursor: pointer;
+}
+
+.flashcard {
+  width: 100%;
+  height: 100%;
+  max-height: 480px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.flashcard.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+  overflow-y: auto;
+}
+
+.card-face.front {
+  background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-subtle) 100%);
+}
+
+.card-face.back {
+  transform: rotateY(180deg);
+  background-color: var(--bg-card);
+}
+
+/* Card Front Content */
+.card-source-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  background-color: rgba(15, 118, 110, 0.1);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  align-self: flex-start;
+}
+
+.front-center {
+  text-align: center;
+  margin: auto 0;
+}
+
+.word-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+
+.phonetic-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  background-color: var(--bg-subtle);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+}
+
+.phonetic-row:active {
+  background-color: var(--border-color);
+}
+
+.phonetic-row.is-playing {
+  background-color: rgba(15, 118, 110, 0.18);
+  border: 1px solid var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.phonetic-row.is-playing .speak-icon {
+  animation: pulse-scale 0.8s infinite alternate;
+}
+
+@keyframes pulse-scale {
+  from { transform: scale(1); }
+  to { transform: scale(1.25); }
+}
+
+.speak-icon {
+  width: 18px;
+  height: 18px;
+  stroke: var(--color-primary);
+}
+
+.card-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* Card Back Content */
+.back-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+
+.back-word {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.back-pos {
+  font-size: 0.85rem;
+  color: var(--color-primary);
+  font-weight: 700;
+  background-color: rgba(15, 118, 110, 0.12);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.definition-box {
+  margin-bottom: 16px;
+}
+
+.zh-meaning {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  margin-bottom: 8px;
+}
+
+/* Handwritten Notes Callout */
+.notes-callout {
+  background-color: #fffbeb;
+  border-left: 3px solid #f59e0b;
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #92400e;
+  line-height: 1.5;
+  margin-bottom: 14px;
+  white-space: pre-line;
+}
+
+[data-theme="dark"] .notes-callout {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #fde68a;
+  border-left-color: #f59e0b;
+}
+
+.sentence-section {
+  background-color: var(--bg-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 0.85rem;
+}
+
+.sentence-en {
+  color: var(--text-main);
+  font-style: italic;
+  margin-bottom: 4px;
+}
+
+.sentence-zh {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+/* Rating Controls */
+.rating-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.rate-btn {
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 12px 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.rate-btn:active {
+  transform: scale(0.96);
+}
+
+.rate-btn.btn-hard {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+[data-theme="dark"] .rate-btn.btn-hard {
+  background-color: rgba(239, 68, 68, 0.18);
+  color: #f87171;
+}
+
+.rate-btn.btn-good {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+[data-theme="dark"] .rate-btn.btn-good {
+  background-color: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+}
+
+.rate-btn.btn-easy {
+  background-color: #d1fae5;
+  color: #059669;
+}
+[data-theme="dark"] .rate-btn.btn-easy {
+  background-color: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+}
+
+.rate-sub {
+  font-size: 0.68rem;
+  font-weight: normal;
+  opacity: 0.85;
+}
